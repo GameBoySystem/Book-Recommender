@@ -1,0 +1,4 @@
+artifacts/book_names.pkl filter=lfs diff=lfs merge=lfs -text
+artifacts/book_pivot.pkl filter=lfs diff=lfs merge=lfs -text
+artifacts/final_rating.pkl filter=lfs diff=lfs merge=lfs -text
+artifacts/model.pkl filter=lfs diff=lfs merge=lfs -text
