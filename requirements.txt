@@ -1,2 +1,7 @@
+fastapi
+pydantic
+sqlalchemy
 streamlit
 numpy
+scipy
+pandas

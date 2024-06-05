@@ -1,0 +1,9 @@
+{
+    "docify.commentService.programmingLanguage": "python",
+    "docify.commentService.autoTranslationService": "English",
+    "docify.translateService.targetLanguage": "Russian",
+    "docify.commentService.moreExpressiveComments": true,
+    "docify.commentService.sidePanelReviewMode": true,
+    "docify.commentService.docstringFormat": "JavaDoc",
+    "docify.commentService.inlineComments": true
+}
