@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рекомендации</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            display: none;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            margin-bottom: 10px;
+        }
+
+        .form-group select,
+        .form-group input {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            /* align-self: flex-end; */
+        }
+
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+
+        .selected-books {
+            margin-top: 20px;
+        }
+
+        .selected-book {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #f9f9f9;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .selected-book button {
+            border: none;
+            background-color: #FF6347;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .selected-book button:hover {
+            background-color: #FF4500;
+        }
+
+        .book-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .book {
+            padding: 10px;
+            width: 150px;
+            text-align: center;
+        }
+
+        .book img {
+            width: 100%;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 10px;
+        }
+
+        .book p {
+            margin: 0;
+        }
+
+        .book .author {
+            font-size: 14px;
+            color: #777;
+        }
+
+        #books {
+            display: none;
+        }
+
+        .filter-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: baseline;
+            gap: 15px;
+            max-width: 600px;
+
+        }
+
+        .filter {
+            width: 100%;
+            min-width: 300px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+            border-radius: 10px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        /* .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        } */
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <div class="form-group">
+            <input type="text" id="search" oninput="searchBooks()" placeholder="Найдите книги, которые вам нравятся">
+            <select id="books" multiple></select>
+            <button onclick="addSelectedBooks()">Добавить книгу</button>
+        </div>
+        <div class="selected-books" id="selected-books"></div>
+        <!-- <div class="form-group">
+            <h3 class="filtering-block">
+                Фильтрация
+                </h2>
+                <div class="filter-container">
+                    <input type="text" id="author" class="filter" placeholder="Автор">
+                    <input type="text" id="name" class="filter" placeholder="Название">
+                    <input type="text" id="date" class="filter" placeholder="Дата">
+                    <input type="text" id="publisher" class="filter" placeholder="Издатель">
+                </div>
+        </div> -->
+        <button onclick="getRecommendations()">Получить рекомендации</button>
+        <h2 id="recommendationsTitle">Вам может понравиться:</h2>
+        <div class="book-container" id="recommendations"></div>
+    </div>
+    <div id="bookModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div>
+                <img id="modalImage" src="" alt="Book Cover" />
+            </div>
+            <div>
+                <h3 id="modalTitle"></h3>
+                <p id="modalAuthor"></p>
+                <button class="search-book">Найти книгу</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const select = document.getElementById('books');
+        const selectedBooksContainer = document.getElementById('selected-books');
+        let selectedBooks = [];
+        const searchInput = document.getElementById('search');
+
+        searchInput.addEventListener('click', () => {
+            if (select.style.display === 'none' || select.style.display === '') {
+                select.style.display = 'block';
+            }
+        });
+
+        // Функция для поиска книг по введенному запросу
+        async function searchBooks() {
+            const query = document.getElementById('search').value;
+            const response = await fetch(`/search?query=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            displaySearchResults(data);
+        }
+
+        // Функция для отображения результатов поиска
+        function displaySearchResults(books) {
+            select.innerHTML = '';
+            select.style.display = books.length ? 'block' : 'none';
+            books.forEach(book => {
+                const option = document.createElement('option');
+                option.value = book['Название'];
+                option.textContent = book['Название'];
+                option.onclick = () => addSelectedBook(book['Название']);
+                select.appendChild(option);
+            });
+        }
+
+        // Функция для добавления выбранных книг в список
+        function addSelectedBooks() {
+            const selectedOptions = Array.from(select.selectedOptions).map(option => option.value);
+            selectedBooks = [...new Set([...selectedBooks, ...selectedOptions])];
+            displaySelectedBooks();
+        }
+
+        // Функция для отображения выбранных книг
+        function displaySelectedBooks() {
+            selectedBooksContainer.innerHTML = '';
+            selectedBooks.forEach(book => {
+                const div = document.createElement('div');
+                div.classList.add('selected-book');
+                const bookName = document.createElement('span');
+                bookName.textContent = book;
+                const removeButton = document.createElement('button');
+                removeButton.textContent = 'Удалить';
+                removeButton.onclick = () => removeBook(book);
+                div.appendChild(bookName);
+                div.appendChild(removeButton);
+                selectedBooksContainer.appendChild(div);
+            });
+        }
+
+        // Функция для удаления книги из списка выбранных книг
+        function removeBook(bookName) {
+            selectedBooks = selectedBooks.filter(book => book !== bookName);
+            displaySelectedBooks();
+        }
+
+        // Функция для получения рекомендаций на основе выбранных книг
+        async function getRecommendations() {
+            const response = await fetch('/recommend/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ selected_books: selectedBooks })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // recommendationsBooks = book;
+                // console.log(data, 'data');
+                displayRecommendations(data.recommended_books, data.poster_url, data.authors);
+            } else {
+                alert('Ошибка при получении рекомендаций');
+            }
+        }
+        // let recommendationsBooks = '';
+
+        function openModal(book, poster, authors) {
+            document.getElementById('modalTitle').textContent = book;
+            document.getElementById('modalAuthor').textContent = authors;
+            document.getElementById('modalImage').src = poster;
+            document.getElementById('bookModal').style.display = "block";
+            document.getElementById('search-book').onclick = () => searchSingleBook(book);
+        }
+
+        function closeModal() {
+            document.getElementById('bookModal').style.display = "none";
+        }
+
+        // Функция для отображения рекомендованных книг
+        function displayRecommendations(books, posters, authors) {
+            const recommendationsTitle = document.getElementById('recommendationsTitle');
+            recommendationsTitle.style.display = 'block';
+            const container = document.getElementById('recommendations');
+            container.innerHTML = '';
+            books.forEach((book, index) => {
+                const div = document.createElement('div');
+                div.classList.add('book');
+                div.onclick = () => openModal(book, posters[index], authors[index]);
+                const img = document.createElement('img');
+                img.src = posters[index];
+                const title = document.createElement('p');
+                title.textContent = book;
+                const author = document.createElement('p');
+                author.classList.add('author');
+                author.textContent = authors[index];
+                div.appendChild(img);
+                div.appendChild(title);
+                div.appendChild(author);
+                container.appendChild(div);
+            });
+        }
+
+
+        // const filters = document.querySelectorAll('.filter');
+        // const onFilter = () => {
+        //     const author = document.querySelector("#author").value.toLowerCase();
+        //     const name = document.querySelector("#name").value.toLowerCase();
+        //     const date = document.querySelector("#date").value;
+        //     const publisher = document.querySelector("#publisher").value.toLowerCase();
+
+        //     const filteredBooks = recommendationsBooks.filter(book => {
+        //         return (
+        //             (!author || book.author.toLowerCase().includes(author)) &&
+        //             (!name || book.name.toLowerCase().includes(name)) &&
+        //             (!date || book.date.includes(date)) &&
+        //             (!publisher || book.publisher.toLowerCase().includes(publisher))
+        //         );
+        //     });
+
+        //     displayRecommendations(filteredBooks);
+
+
+        // };
+        // filters.forEach(filter => {
+        //     filter.addEventListener('input', onFilter);
+        // });
+
+        // const displayFiltredBooks = (books, posters, authors, publisher) => {
+        //     // ...
+        //     books.forEach((book, index) => {
+        //         // ...
+        //         const publisherElement = document.createElement('p');
+        //         publisherElement.textContent = publisher[index];
+        //         div.appendChild(publisherElement);
+        //         container.appendChild(div);
+        //     });
+        // };
+
+        // Загрузка книг при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            loadBooks();
+        });
+
+        // Функция для загрузки всех книг
+        async function loadBooks() {
+            const response = await fetch('/books');
+            const data = await response.json();
+            data.forEach(book => {
+                const option = document.createElement('option');
+                option.value = book;
+                option.textContent = book;
+                select.appendChild(option);
+            });
+        }
+
+        function searchSingleBook(title) {
+            // const query = `${title} ${author}`;
+            // const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+            // window.open(url);
+            const url = 'https://www.google.com/search?q='
+            searchString = url + title + '&oq=' + title + '&gs_lcrp=EgZjaHJvbWUyBggAEEUYOdIBCDExODBqMGo3qAIAsAIA&sourceid=chrome&ie=UTF-8';
+            window.open(searchString);
+        }
+
+    </script>
+</body>
+
+</html>

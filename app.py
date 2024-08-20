@@ -2,14 +2,15 @@ import pickle
 import streamlit as st
 import numpy as np
 
-
 st.header('Book Recommender System Using Machine Learning')
+
+# Загрузка модели и данных
 model = pickle.load(open('artifacts/model.pkl','rb'))
 book_names = pickle.load(open('artifacts/book_names.pkl','rb'))
 final_rating = pickle.load(open('artifacts/final_rating.pkl','rb'))
 book_pivot = pickle.load(open('artifacts/book_pivot.pkl','rb'))
 
-
+# Функция для получения постеров книг
 def fetch_poster(suggestion):
     book_name = []
     ids_index = []
@@ -28,44 +29,35 @@ def fetch_poster(suggestion):
 
     return poster_url
 
-
-
-def recommend_book(book_name):
-    books_list = []
-    book_id = np.where(book_pivot.index == book_name)[0][0]
-    distance, suggestion = model.kneighbors(book_pivot.iloc[book_id,:].values.reshape(1,-1), n_neighbors=6 )
-
-    poster_url = fetch_poster(suggestion)
+# Функция для получения рекомендаций
+def recommend_books(selected_books):
+    book_indices = []
+    for book_name in selected_books:
+        book_id = np.where(book_pivot.index == book_name)[0][0]
+        book_indices.append(book_id)
     
-    for i in range(len(suggestion)):
-            books = book_pivot.index[suggestion[i]]
-            for j in books:
-                books_list.append(j)
-    return books_list , poster_url       
+    book_vectors = book_pivot.iloc[book_indices, :].values
+    avg_book_vector = np.mean(book_vectors, axis=0).reshape(1, -1)
+    
+    distance, suggestions = model.kneighbors(avg_book_vector, n_neighbors=6)
+    
+    poster_url = fetch_poster(suggestions)
+    recommended_books = [book_pivot.index[suggestion] for suggestion in suggestions[0]]
+    
+    return recommended_books, poster_url
 
-
-
-selected_books = st.selectbox(
-    "Type or select a book from the dropdown",
+# Выбор нескольких книг
+selected_books = st.multiselect(
+    "Type or select books from the dropdown",
     book_names
 )
 
-if st.button('Show Recommendation'):
-    recommended_books,poster_url = recommend_book(selected_books)
-    col1, col2, col3, col4, col5 = st.columns(5)
-    with col1:
-        st.text(recommended_books[1])
-        st.image(poster_url[1])
-    with col2:
-        st.text(recommended_books[2])
-        st.image(poster_url[2])
+# Показ рекомендаций
+if st.button('Show Recommendation') and selected_books:
+    recommended_books, poster_url = recommend_books(selected_books)
+    cols = st.columns(5)
 
-    with col3:
-        st.text(recommended_books[3])
-        st.image(poster_url[3])
-    with col4:
-        st.text(recommended_books[4])
-        st.image(poster_url[4])
-    with col5:
-        st.text(recommended_books[5])
-        st.image(poster_url[5])
+    for i in range(1, 6):
+        with cols[i - 1]:
+            st.text(recommended_books[i])
+            st.image(poster_url[i])
