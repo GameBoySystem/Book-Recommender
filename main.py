@@ -76,8 +76,8 @@ def get_recommendations(request: BookRequest):
         HTTPException: Если произошла ошибка в процессе рекомендации.
     """
     try:
-        recommended_books, poster_url, authors = recommend_books(request.selected_books)
-        return {"recommended_books": recommended_books, "poster_url": poster_url, "authors": authors}
+        recommended_books, poster_url, authors, publisher = recommend_books(request.selected_books)
+        return {"recommended_books": recommended_books, "poster_url": poster_url, "authors": authors, "publisher": publisher}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -151,8 +151,9 @@ def recommend_books(selected_books):
     filtered_poster_url = [poster for book, poster in zip(recommended_books, poster_url) if book not in selected_books]
 
     authors = [books_df[books_df['Название'] == book]['Автор(ы)'].values[0] for book in filtered_recommended_books]  # Получение авторов
-
-    return filtered_recommended_books, filtered_poster_url, authors
+    publisher = [books_df[books_df['Название'] == book]['Издатель'].values[0] for book in filtered_recommended_books]  
+    # НАДО ПЕРЕДЕЛАТЬ ЧТО БЫ ВЫДАВАЛО {books: {author:..., poster_url:..., publisher:..., date:...}}
+    return filtered_recommended_books, filtered_poster_url, authors, publisher
 
 if __name__ == '__main__':
     uvicorn.run("main:app", port=8005, reload=True)

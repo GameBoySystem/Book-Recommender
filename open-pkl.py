@@ -1,7 +1,7 @@
 import pickle
 
 # Укажите путь к вашему .pkl файлу
-file_path = "artifacts/book_names.pkl"
+file_path = "artifacts/book_pivot.pkl"
 
 # Открываем файл в режиме чтения
 with open(file_path, "rb") as f:

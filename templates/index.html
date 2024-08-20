@@ -125,23 +125,100 @@
             color: #777;
         }
 
-        #books{
+        #books {
             display: none;
         }
+
+        .filter-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: baseline;
+            gap: 15px;
+            max-width: 600px;
+
+        }
+
+        .filter {
+            width: 100%;
+            min-width: 300px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+            border-radius: 10px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        /* .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        } */
     </style>
 </head>
 
 <body>
     <div class="container">
+
         <div class="form-group">
             <input type="text" id="search" oninput="searchBooks()" placeholder="Найдите книги, которые вам нравятся">
             <select id="books" multiple></select>
             <button onclick="addSelectedBooks()">Добавить книгу</button>
         </div>
         <div class="selected-books" id="selected-books"></div>
+        <!-- <div class="form-group">
+            <h3 class="filtering-block">
+                Фильтрация
+                </h2>
+                <div class="filter-container">
+                    <input type="text" id="author" class="filter" placeholder="Автор">
+                    <input type="text" id="name" class="filter" placeholder="Название">
+                    <input type="text" id="date" class="filter" placeholder="Дата">
+                    <input type="text" id="publisher" class="filter" placeholder="Издатель">
+                </div>
+        </div> -->
         <button onclick="getRecommendations()">Получить рекомендации</button>
         <h2 id="recommendationsTitle">Вам может понравиться:</h2>
         <div class="book-container" id="recommendations"></div>
+    </div>
+    <div id="bookModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div>
+                <img id="modalImage" src="" alt="Book Cover" />
+            </div>
+            <div>
+                <h3 id="modalTitle"></h3>
+                <p id="modalAuthor"></p>
+                <button class="search-book">Найти книгу</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -219,10 +296,25 @@
 
             if (response.ok) {
                 const data = await response.json();
+                // recommendationsBooks = book;
+                // console.log(data, 'data');
                 displayRecommendations(data.recommended_books, data.poster_url, data.authors);
             } else {
                 alert('Ошибка при получении рекомендаций');
             }
+        }
+        // let recommendationsBooks = '';
+
+        function openModal(book, poster, authors) {
+            document.getElementById('modalTitle').textContent = book;
+            document.getElementById('modalAuthor').textContent = authors;
+            document.getElementById('modalImage').src = poster;
+            document.getElementById('bookModal').style.display = "block";
+            document.getElementById('search-book').onclick = () => searchSingleBook(book);
+        }
+
+        function closeModal() {
+            document.getElementById('bookModal').style.display = "none";
         }
 
         // Функция для отображения рекомендованных книг
@@ -234,6 +326,7 @@
             books.forEach((book, index) => {
                 const div = document.createElement('div');
                 div.classList.add('book');
+                div.onclick = () => openModal(book, posters[index], authors[index]);
                 const img = document.createElement('img');
                 img.src = posters[index];
                 const title = document.createElement('p');
@@ -247,6 +340,42 @@
                 container.appendChild(div);
             });
         }
+
+
+        // const filters = document.querySelectorAll('.filter');
+        // const onFilter = () => {
+        //     const author = document.querySelector("#author").value.toLowerCase();
+        //     const name = document.querySelector("#name").value.toLowerCase();
+        //     const date = document.querySelector("#date").value;
+        //     const publisher = document.querySelector("#publisher").value.toLowerCase();
+
+        //     const filteredBooks = recommendationsBooks.filter(book => {
+        //         return (
+        //             (!author || book.author.toLowerCase().includes(author)) &&
+        //             (!name || book.name.toLowerCase().includes(name)) &&
+        //             (!date || book.date.includes(date)) &&
+        //             (!publisher || book.publisher.toLowerCase().includes(publisher))
+        //         );
+        //     });
+
+        //     displayRecommendations(filteredBooks);
+
+
+        // };
+        // filters.forEach(filter => {
+        //     filter.addEventListener('input', onFilter);
+        // });
+
+        // const displayFiltredBooks = (books, posters, authors, publisher) => {
+        //     // ...
+        //     books.forEach((book, index) => {
+        //         // ...
+        //         const publisherElement = document.createElement('p');
+        //         publisherElement.textContent = publisher[index];
+        //         div.appendChild(publisherElement);
+        //         container.appendChild(div);
+        //     });
+        // };
 
         // Загрузка книг при загрузке страницы
         document.addEventListener('DOMContentLoaded', () => {
@@ -263,6 +392,15 @@
                 option.textContent = book;
                 select.appendChild(option);
             });
+        }
+
+        function searchSingleBook(title) {
+            // const query = `${title} ${author}`;
+            // const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+            // window.open(url);
+            const url = 'https://www.google.com/search?q='
+            searchString = url + title + '&oq=' + title + '&gs_lcrp=EgZjaHJvbWUyBggAEEUYOdIBCDExODBqMGo3qAIAsAIA&sourceid=chrome&ie=UTF-8';
+            window.open(searchString);
         }
 
     </script>

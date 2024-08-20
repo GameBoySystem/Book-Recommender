@@ -126,6 +126,7 @@ def train_model(book_pivot):
     model.fit(book_sparse)
     return model
 
+
 def save_artifacts(model, book_pivot, final_ratings):
     """
     Сохранение артефактов модели и данных.
